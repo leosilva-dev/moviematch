@@ -45,6 +45,8 @@ export default function SessionPage() {
   const controls = useAnimationControls();
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const [currentMovieIndex, setCurrentMovieIndex] = useState(0);
+
   useEffect(() => {
     const fetchMovies = async () => {
       setMoviesLoading(true);
@@ -84,19 +86,6 @@ export default function SessionPage() {
     fetchMovies();
   }, []);
 
-  const handleCardGone = (direction: "left" | "right") => {
-    if (cards.length > 0) {
-      if (direction === "right") {
-        console.log("Gostei do filme:", cards[0]);
-      } else {
-        console.log("Não gostei do filme:", cards[0]);
-      }
-
-      setIsAnimating(true);
-      setCards((prev) => prev.slice(1));
-    }
-  };
-
   useEffect(() => {
     if (isAnimating) {
       controls.set({ x: 0, rotate: 0 });
@@ -118,7 +107,9 @@ export default function SessionPage() {
           rotate: 30,
           transition: { duration: 0.3 },
         })
-        .then(() => handleCardGone("right"));
+        .then(() => handleAccept(cards[currentMovieIndex].id));
+      setIsAnimating(true);
+      moveToNextCard();
     } else if (info.offset.x < -threshold) {
       setIsAnimating(true);
       controls
@@ -127,7 +118,9 @@ export default function SessionPage() {
           rotate: -30,
           transition: { duration: 0.3 },
         })
-        .then(() => handleCardGone("left"));
+        .then(() => handleReject(cards[currentMovieIndex].id));
+      setIsAnimating(true);
+      moveToNextCard();
     } else {
       controls.start({
         x: 0,
@@ -137,26 +130,21 @@ export default function SessionPage() {
     }
   };
 
-  const handleReject = () => {
-    setIsAnimating(true);
-    controls
-      .start({
-        x: -500,
-        rotate: -30,
-        transition: { duration: 0.3 },
-      })
-      .then(() => handleCardGone("left"));
+  const moveToNextCard = () => {
+    setCurrentMovieIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      return nextIndex >= cards.length ? 0 : nextIndex;
+    });
   };
 
-  const handleAccept = () => {
-    setIsAnimating(true);
-    controls
-      .start({
-        x: 500,
-        rotate: 30,
-        transition: { duration: 0.3 },
-      })
-      .then(() => handleCardGone("right"));
+  const handleReject = (movieId: number) => {
+    console.log(`Rejeitado: ${movieId}`);
+    moveToNextCard();
+  };
+
+  const handleAccept = (movieId: number) => {
+    console.log(`Aceito: ${movieId}`);
+    moveToNextCard();
   };
 
   useEffect(() => {
@@ -194,10 +182,10 @@ export default function SessionPage() {
     <main className="flex min-h-screen items-center justify-center p-2 bg-gradient-to-b from-gray-200 via-white to-gray-50">
       <div className="w-full max-w-md mx-auto flex flex-col items-center">
         <div className="relative w-full min-h-[630px] flex items-center justify-center">
-          {cards.length > 0 ? (
+          {cards.length > 0 && (
             <>
               <motion.div
-                key={cards[0].id}
+                key={cards[currentMovieIndex].id}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 onDragEnd={handleDragEnd}
@@ -212,80 +200,45 @@ export default function SessionPage() {
                 <Card className="w-full h-[600px] shadow-xl/30  overflow-hidden cursor-grab active:cursor-grabbing p-0 border-none">
                   <div className="relative w-full h-[400px] overflow-hidden">
                     <Image
-                      src={cards[0].imageUrl || ""}
-                      alt={cards[0].title}
+                      src={cards[currentMovieIndex].imageUrl || ""}
+                      alt={cards[currentMovieIndex].title}
                       fill
                       className="object-cover blur-xl scale-110"
                     />
 
                     <Image
-                      src={cards[0].imageUrl || ""}
-                      alt={cards[0].title}
+                      src={cards[currentMovieIndex].imageUrl || ""}
+                      alt={cards[currentMovieIndex].title}
                       fill
                       className="object-contain z-10"
                     />
                     <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-sm">
-                      ★ {cards[0].rating.toFixed(1)}
+                      ★ {cards[currentMovieIndex].rating.toFixed(1)}
                     </div>
                   </div>
                   <CardContent className="px-4">
                     <h2 className="text-xl font-bold text-gray-900">
-                      {cards[0].title}
+                      {cards[currentMovieIndex].title}
                     </h2>
                     <p className="text-sm text-gray-400 mb-2">
-                      {new Date(cards[0].releaseDate).toLocaleDateString(
-                        "pt-BR"
-                      )}
+                      {new Date(
+                        cards[currentMovieIndex].releaseDate
+                      ).toLocaleDateString("pt-BR")}
                     </p>
                     <p className="text-sm line-clamp-4">
-                      {cards[0].description}
+                      {cards[currentMovieIndex].description}
                     </p>
                   </CardContent>
                 </Card>
               </motion.div>
             </>
-          ) : (
-            <div className="text-center p-8">
-              <h2 className="text-xl font-semibold mb-2">
-                Acabaram os filmes!
-              </h2>
-              <Button
-                onClick={async () => {
-                  setMoviesLoading(true);
-                  try {
-                    const response = await fetch("/api/movies/top-rated");
-                    const data = await response.json();
-
-                    const movieCards = data.results.map((movie: Movie) => ({
-                      id: movie.id,
-                      title: movie.title,
-                      description: movie.overview,
-                      imageUrl: movie.poster_path
-                        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                        : null,
-                      releaseDate: movie.release_date,
-                      rating: movie.vote_average,
-                    }));
-
-                    setCards(movieCards);
-                  } catch (err) {
-                    console.error(err);
-                  } finally {
-                    setMoviesLoading(false);
-                  }
-                }}
-                className="mt-4"
-              >
-                Reiniciar
-              </Button>
-            </div>
           )}
         </div>
 
         {cards.length > 0 && (
           <div className=" flex gap-6 mt-6">
             <Button
-              onClick={handleReject}
+              onClick={() => handleReject(cards[currentMovieIndex].id)}
               size="lg"
               variant="outline"
               className="h-14 w-14 rounded-full border-red-500 bg-white group hover:bg-red-500 cursor-pointer"
@@ -294,7 +247,7 @@ export default function SessionPage() {
               <X className="h-8 w-8 text-red-500 group-hover:text-white" />
             </Button>
             <Button
-              onClick={handleAccept}
+              onClick={() => handleAccept(cards[currentMovieIndex].id)}
               size="lg"
               variant="outline"
               className="h-14 w-14 rounded-full border-green-500 bg-white group hover:bg-green-500 cursor-pointer"
