@@ -17,4 +17,16 @@ model Session {
   id        String   @id @default(uuid()) @db.Uuid
   code      String   @unique
   createdAt DateTime @default(now())
+  Votes     Votes[]
+}
+
+model Votes {
+  id        String   @id @default(uuid()) @db.Uuid
+  sessionId String   @db.Uuid
+  session   Session  @relation(fields: [sessionId], references: [id])
+  movieId   String
+  votes     Int
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, movieId])
 }
