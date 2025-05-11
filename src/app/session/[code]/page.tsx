@@ -108,8 +108,6 @@ export default function SessionPage() {
           transition: { duration: 0.3 },
         })
         .then(() => handleAccept(cards[currentMovieIndex].id));
-      setIsAnimating(true);
-      moveToNextCard();
     } else if (info.offset.x < -threshold) {
       setIsAnimating(true);
       controls
@@ -119,8 +117,6 @@ export default function SessionPage() {
           transition: { duration: 0.3 },
         })
         .then(() => handleReject(cards[currentMovieIndex].id));
-      setIsAnimating(true);
-      moveToNextCard();
     } else {
       controls.start({
         x: 0,
@@ -138,13 +134,29 @@ export default function SessionPage() {
   };
 
   const handleReject = (movieId: number) => {
-    console.log(`Rejeitado: ${movieId}`);
+    console.log(`rejected ${movieId}`);
+    setIsAnimating(true);
     moveToNextCard();
   };
 
-  const handleAccept = (movieId: number) => {
-    console.log(`Aceito: ${movieId}`);
-    moveToNextCard();
+  const handleAccept = async (movieId: number) => {
+    if (!session) return;
+
+    try {
+      await fetch("/api/votes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: session.id,
+          movieId: String(movieId),
+        }),
+      });
+    } catch (error) {
+      console.error("Erro ao registrar voto:", error);
+    } finally {
+      setIsAnimating(true);
+      moveToNextCard();
+    }
   };
 
   useEffect(() => {
