@@ -1,25 +1,28 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+import { nanoid } from "nanoid";
+
 export async function POST(req: Request) {
-  const { code } = await req.json();
+  let { code } = await req.json();
+
+  if (!code) {
+    code = nanoid(6);
+  }
 
   const existingSession = await prisma.session.findUnique({
     where: { code },
   });
 
-  if (existingSession) {
-    return NextResponse.json(
-      { message: "Sessão já existe com esse código." },
-      { status: 400 }
-    );
-  }
-
   try {
-    const session = await prisma.session.create({
-      data: { code },
-    });
-    return NextResponse.json(session, { status: 201 });
+    if (!existingSession) {
+      const session = await prisma.session.create({
+        data: { code },
+      });
+      return NextResponse.json(session, { status: 201 });
+    } else {
+      return NextResponse.json({ code }, { status: 200 });
+    }
   } catch (error) {
     return NextResponse.json(
       { message: "Erro ao criar sessão", error },
