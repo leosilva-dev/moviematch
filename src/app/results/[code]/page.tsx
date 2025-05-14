@@ -59,10 +59,13 @@ export default function ResultsPage() {
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="relative flex items-center mb-8">
-          <Link href="/" className="text-blue-600 hover:underline absolute ">
+          <Link
+            href={`/session/${code}`}
+            className=" hover:underline absolute "
+          >
             <Button className="cursor-pointer" variant={"ghost"}>
               <ChevronLeft />
-              Voltar para o início
+              Voltar
             </Button>
           </Link>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-800 flex-1 text-center">

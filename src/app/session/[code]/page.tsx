@@ -2,12 +2,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Star } from "lucide-react";
+import { Check, X, Star, ChevronLeft, Loader2 } from "lucide-react";
 import { motion, type PanInfo, useAnimationControls } from "framer-motion";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 
 type Session = {
   id: string;
@@ -186,14 +187,32 @@ export default function SessionPage() {
     fetchSession();
   }, [code]);
 
-  if (loading) return <p className="p-4">Carregando sessão...</p>;
-  if (error) return <p className="p-4 text-red-500">Erro: {error}</p>;
   if (!session) return null;
-  if (moviesLoading) return <p className="p-4">Carregando filmes...</p>;
+  if (error) return <p className="p-4 text-red-500">Erro: {error}</p>;
+
+  if (loading || moviesLoading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+        <div className="flex items-center space-x-2">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <p className="text-gray-600 text-lg">Carregando resultados...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center p-2 bg-gradient-to-b from-gray-200 via-white to-gray-50">
       <div className="w-full max-w-md mx-auto flex flex-col items-center">
+        <div className="relative flex items-center mb-8 w-full">
+          <Link href="/" className="hover:underline absolute ">
+            <Button className="cursor-pointer" variant={"ghost"}>
+              <ChevronLeft />
+              Voltar
+            </Button>
+          </Link>
+        </div>
+
         <div className="relative w-full min-h-[630px] flex items-center justify-center">
           {cards.length > 0 && (
             <>
@@ -210,7 +229,7 @@ export default function SessionPage() {
                 style={{ width: "100%", position: "absolute" }}
                 className="touch-none"
               >
-                <Card className="w-full h-[600px] shadow-xl/30  overflow-hidden cursor-grab active:cursor-grabbing p-0 border-none">
+                <Card className="w-full h-[600px] shadow-xl/30 overflow-hidden cursor-grab active:cursor-grabbing p-0 border-none">
                   <div className="relative w-full h-[400px] overflow-hidden">
                     <Image
                       src={cards[currentMovieIndex].imageUrl || ""}
@@ -225,7 +244,7 @@ export default function SessionPage() {
                       fill
                       className="object-contain z-10"
                     />
-                    <Badge className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-sm">
+                    <Badge className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-sm z-10">
                       <Star /> {cards[currentMovieIndex].rating.toFixed(1)}
                     </Badge>
                   </div>
@@ -248,28 +267,47 @@ export default function SessionPage() {
           )}
         </div>
 
-        {cards.length > 0 && (
-          <div className=" flex gap-6 mt-6">
+        <div className="flex items-center justify-between w-full mt-6">
+          <div className="flex gap-6">
             <Button
               onClick={() => handleReject(cards[currentMovieIndex].id)}
               size="lg"
               variant="outline"
-              className="h-14 w-14 rounded-full border-red-500 bg-white group hover:bg-red-500 cursor-pointer"
+              className="h-14 w-14 rounded-full border-red-500 bg-white group hover:bg-gradient-to-r from-red-500 to-red-600 text-red-500 hover:text-white cursor-pointer transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isAnimating}
             >
-              <X className="h-8 w-8 text-red-500 group-hover:text-white" />
+              <X className="h-8 w-8 group-hover:text-white" />
             </Button>
             <Button
               onClick={() => handleAccept(cards[currentMovieIndex].id)}
               size="lg"
               variant="outline"
-              className="h-14 w-14 rounded-full border-green-500 bg-white group hover:bg-green-500 cursor-pointer"
+              className="h-14 w-14 rounded-full border-green-500 bg-white group hover:bg-gradient-to-r from-green-500 to-green-600 text-green-500 hover:text-white cursor-pointer transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isAnimating}
             >
-              <Check className="h-8 w-8 text-green-500 group-hover:text-white" />
+              <Check className="h-8 w-8 group-hover:text-white" />
             </Button>
           </div>
-        )}
+          <Link href={`/results/${code}`}>
+            <Button className="h-14 px-6 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 cursor-pointer transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg flex items-center gap-2">
+              <span className="text-base font-semibold">Resultados</span>
+              <svg
+                className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Button>
+          </Link>
+        </div>
       </div>
     </main>
   );
