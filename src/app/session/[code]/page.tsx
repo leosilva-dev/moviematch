@@ -1,7 +1,8 @@
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Check, X, Star } from "lucide-react";
 import { motion, type PanInfo, useAnimationControls } from "framer-motion";
 
 import { useEffect, useState } from "react";
@@ -224,9 +225,9 @@ export default function SessionPage() {
                       fill
                       className="object-contain z-10"
                     />
-                    <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-sm">
-                      ★ {cards[currentMovieIndex].rating.toFixed(1)}
-                    </div>
+                    <Badge className="absolute top-2 right-2 bg-black/60 text-white px-2 py-1 rounded-full text-sm">
+                      <Star /> {cards[currentMovieIndex].rating.toFixed(1)}
+                    </Badge>
                   </div>
                   <CardContent className="px-4">
                     <h2 className="text-xl font-bold text-gray-900">
